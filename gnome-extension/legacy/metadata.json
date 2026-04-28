@@ -1,0 +1,7 @@
+{
+    "name": "NTU VPN",
+    "description": "Quick connect/disconnect for NTU GlobalProtect VPN",
+    "uuid": "ntu-vpn@local",
+    "shell-version": ["40", "41", "42", "43", "44"],
+    "version": 1
+}
