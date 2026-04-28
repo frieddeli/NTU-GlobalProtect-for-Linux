@@ -1,4 +1,4 @@
-# 🛡️ Unofficial NTU GlobalProtect VPN Setup for Linux
+# 🛡️ Unofficial NTU GlobalProtect VPN GUI for Linux
 
 ![Ubuntu Version](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04%20%7C%2026.04-orange?logo=ubuntu)
 ![GNOME Version](https://img.shields.io/badge/GNOME-40%20--%2050+-blue?logo=gnome)
