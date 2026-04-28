@@ -5,9 +5,11 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 > [!CAUTION]
-> **DISCLAIMER:** This is an unofficial community tool. It is **NOT** affiliated with, endorsed by, or supported by Nanyang Technological University (NTU). Use this script at your own risk. The author is not responsible for network issues, account locks, or system damages.
+> **DISCLAIMER:** This is an unofficial community tool. It is **NOT** affiliated with, endorsed by, or supported by Nanyang Technological University (NTU). Use this script at your own risk.
 
 A seamless GlobalProtect VPN client for NTU students and staff. It combines `openconnect` for stable tunneling, `gp-saml-gui` for Microsoft SSO support, and a sleek GNOME Shell indicator for easy toggling.
+
+Great for those who wish to switch to daily driving linux !
 
 ---
 
