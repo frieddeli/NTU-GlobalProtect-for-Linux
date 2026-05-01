@@ -1,5 +1,6 @@
 import GObject from 'gi://GObject';
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
@@ -28,17 +29,27 @@ class NtuVpnIndicator extends PanelMenu.Button {
         });
     }
 
-    _isConnected() {
+    async _isConnected() {
         try {
-            const [ok, stdout] = GLib.spawn_command_line_sync('pgrep openconnect');
-            return ok && stdout && stdout.length > 0;
-        } catch (_) {
+            let proc = Gio.Subprocess.new(['pgrep', 'openconnect'], Gio.SubprocessFlags.NONE);
+            return new Promise((resolve) => {
+                proc.wait_async(null, (p, res) => {
+                    try {
+                        p.wait_finish(res);
+                        resolve(p.get_successful());
+                    } catch (e) {
+                        resolve(false);
+                    }
+                });
+            });
+        } catch (e) {
             return false;
         }
     }
 
-    _updateStatus() {
-        if (this._isConnected()) {
+    async _updateStatus() {
+        const isConnected = await this._isConnected();
+        if (isConnected) {
             this._icon.icon_name = 'network-vpn-symbolic';
             this._icon.style = 'color: #33d17a;';
             this._statusItem.label.text = 'NTU VPN: Connected — click to disconnect';
@@ -49,7 +60,7 @@ class NtuVpnIndicator extends PanelMenu.Button {
         }
     }
 
-    _toggle() {
+    async _toggle() {
         GLib.spawn_command_line_async(`bash -c "${GLib.get_home_dir()}/.local/bin/ntu-vpn.sh"`);
 
         let attempts = 0;
