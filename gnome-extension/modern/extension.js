@@ -7,6 +7,8 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
+const VPN_GATEWAY = 'vpngate-student.ntu.edu.sg';
+
 const NtuVpnIndicator = GObject.registerClass(
 class NtuVpnIndicator extends PanelMenu.Button {
     _init() {
@@ -61,13 +63,70 @@ class NtuVpnIndicator extends PanelMenu.Button {
     }
 
     async _toggle() {
-        GLib.spawn_command_line_async(`bash -c "${GLib.get_home_dir()}/.local/bin/ntu-vpn.sh"`);
+        const isConnected = await this._isConnected();
 
-        let attempts = 0;
-        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
-            this._updateStatus();
-            return ++attempts < 15 ? GLib.SOURCE_CONTINUE : GLib.SOURCE_REMOVE;
-        });
+        if (isConnected) {
+            // Disconnect logic
+            try {
+                let proc = Gio.Subprocess.new(['pkexec', 'pkill', 'openconnect'], Gio.SubprocessFlags.NONE);
+                proc.wait_async(null, (p, res) => {
+                    p.wait_finish(res);
+                    Main.notify('NTU VPN', 'Disconnected');
+                    this._updateStatus();
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        } else {
+            // Connect logic
+            Main.notify('NTU VPN', 'Opening login window...');
+            
+            try {
+                let samlProc = Gio.Subprocess.new(
+                    ['gp-saml-gui', '--gateway', VPN_GATEWAY],
+                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+                );
+
+                samlProc.communicate_utf8_async(null, null, (p, res) => {
+                    try {
+                        let [, stdout, stderr] = p.communicate_utf8_finish(res);
+                        if (!p.get_successful()) {
+                            Main.notify('NTU VPN', 'Authentication failed or cancelled');
+                            return;
+                        }
+
+                        // Parse COOKIE and USER from output
+                        let cookie = stdout.match(/^COOKIE=(.*)$/m)?.[1];
+                        let user = stdout.match(/^USER=(.*)$/m)?.[1];
+
+                        if (!cookie) {
+                            Main.notify('NTU VPN', 'Failed to acquire auth cookie');
+                            return;
+                        }
+
+                        Main.notify('NTU VPN', 'Connecting...');
+
+                        // Start openconnect via pkexec
+                        // We use a shell wrapper to pipe the cookie to stdin safely
+                        let ocCmd = [
+                            'pkexec', 'sh', '-c',
+                            `echo "${cookie}" | openconnect --protocol=gp --useragent='PAN GlobalProtect' --user="${user}" --os=linux-64 --usergroup=gateway:prelogin-cookie --passwd-on-stdin ${VPN_GATEWAY}`
+                        ];
+
+                        let ocProc = Gio.Subprocess.new(ocCmd, Gio.SubprocessFlags.NONE);
+                        ocProc.wait_async(null, (p, res) => {
+                            p.wait_finish(res);
+                            this._updateStatus();
+                        });
+
+                    } catch (e) {
+                        Main.notify('NTU VPN', 'Error: ' + e.message);
+                    }
+                });
+            } catch (e) {
+                Main.notify('NTU VPN', 'Failed to start login tool');
+            }
+        }
     }
 
     destroy() {

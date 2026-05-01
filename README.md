@@ -19,7 +19,8 @@ While an official GlobalProtect client exists, it often lags behind modern Linux
 
 * **Ubuntu 26.04 Support:** The official client does not currently support newer releases like 26.04.
 * **Modern Dependencies:** Avoids the headache of hunting down outdated libraries required by the official binary.
-* **Native Integration:** Provides a native GNOME Shell icon, so you don't have to keep a terminal open or use a clunky UI.
+* **Native Integration:** Provides a native GNOME Shell icon and uses system PolicyKit for secure, integrated password prompts.
+* **Non-Blocking UI:** Uses fully asynchronous processing to ensure your desktop never freezes during connection transitions.
 
 ---
 
@@ -36,8 +37,8 @@ While an official GlobalProtect client exists, it often lags behind modern Linux
 1. **Clone and Run:**
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ntu-vpn-setup.git
-   cd ntu-vpn-setup
+   git clone https://github.com/frieddeli/NTU-GlobalProtect-for-Linux.git
+   cd NTU-GlobalProtect-for-Linux
    chmod +x install.sh
    ./install.sh
    ```
@@ -59,21 +60,16 @@ Click the VPN icon in your top panel:
 * **⚪ Grey Icon:** Disconnected. Click to open the Microsoft SSO login window.
 * **🟢 Green Icon:** Connected. Click to disconnect instantly.
 
-### 💻 Terminal
-
-You can also toggle the connection manually:
-
-```bash
-ntu-vpn.sh
-```
+The extension uses native system notifications to keep you updated on the connection status. When connecting, you will be prompted for your system password via the standard GNOME security popup to authorize the VPN tunnel.
 
 ---
 
 ## 🔍 How It Works
 
-1. **Authentication:** `gp-saml-gui` launches a secure web view to handle the Microsoft SAML login.
-2. **Connection:** Once authenticated, the session cookie is passed to `openconnect` using the GlobalProtect protocol.
-3. **Persistence:** A background polling mechanism (every 5s) keeps the top panel icon in sync with your actual connection state.
+1. **Authentication:** The extension launches `gp-saml-gui` in the background to handle the Microsoft SAML login via a secure web view.
+2. **Seamless Hand-off:** Once authenticated, the extension internally captures the session cookie and securely passes it to `openconnect`.
+3. **Integrated Permissions:** Uses `pkexec` (PolicyKit) for privilege escalation, removing the need for manual `sudo` configuration or insecure password-less sudo rules.
+4. **Asynchronous Monitoring:** A background event loop monitors the connection state without blocking the GNOME Shell UI thread, ensuring a smooth desktop experience even on resume from sleep.
 
 ---
 

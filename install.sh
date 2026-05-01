@@ -35,18 +35,6 @@ echo "==> Installing gp-saml-gui..."
 pipx install git+https://github.com/dlenski/gp-saml-gui.git --system-site-packages --force || \
 pipx install gp-saml-gui --system-site-packages --force
 
-echo "==> Installing VPN toggle script..."
-mkdir -p "$HOME/.local/bin"
-cp scripts/ntu-vpn.sh "$HOME/.local/bin/ntu-vpn.sh"
-chmod +x "$HOME/.local/bin/ntu-vpn.sh"
-
-OPENCONNECT_PATH=$(which openconnect)
-PKILL_PATH=$(which pkill)
-echo "==> Configuring sudo for openconnect (no password prompt)..."
-echo "$USER ALL=(ALL) NOPASSWD: $OPENCONNECT_PATH, $PKILL_PATH" \
-    | sudo tee /etc/sudoers.d/openconnect > /dev/null
-sudo chmod 440 /etc/sudoers.d/openconnect
-
 echo "==> Installing GNOME extension..."
 EXT_DIR="$HOME/.local/share/gnome-shell/extensions/ntu-vpn@local"
 mkdir -p "$EXT_DIR"
